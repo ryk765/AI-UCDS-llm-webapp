@@ -1,0 +1,42 @@
+services:
+  gateway:
+    build: ./gateway
+    ports:
+      - "80:80"
+    depends_on: [word-vector, next-token, attention, tokenizer]
+
+  word-vector:
+    build:
+      context: .
+      dockerfile: apps/base/Dockerfile
+      args:
+        APP_DIR: apps/src/word-vector
+        APP_SLUG: word-vector
+        BACKEND_MODULE: app.main:app
+
+  next-token:
+    build:
+      context: .
+      dockerfile: apps/base/Dockerfile
+      args:
+        APP_DIR: apps/src/next-token
+        APP_SLUG: next-token
+        BACKEND_MODULE: app.main:app
+
+  attention:
+    build:
+      context: .
+      dockerfile: apps/base/Dockerfile
+      args:
+        APP_DIR: apps/src/attention
+        APP_SLUG: attention
+        BACKEND_MODULE: main:app
+
+  tokenizer:
+    build:
+      context: .
+      dockerfile: apps/base/Dockerfile
+      args:
+        APP_DIR: apps/src/tokenizer
+        APP_SLUG: tokenizer
+        BACKEND_MODULE: app.main:app
