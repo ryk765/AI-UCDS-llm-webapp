@@ -1,0 +1,16 @@
+[submodule "apps/src/word-vector"]
+	path = apps/src/word-vector
+	url = https://github.com/ryk765/AI-UCDS-llm-word-vector-visualizer.git
+	branch = main
+[submodule "apps/src/next-token"]
+	path = apps/src/next-token
+	url = https://github.com/ryk765/AI-UCDS-llm-next-token-predictor.git
+	branch = master
+[submodule "apps/src/attention"]
+	path = apps/src/attention
+	url = https://github.com/ryk765/AI-UCDS-llm-attention-visualizer.git
+	branch = master
+[submodule "apps/src/tokenizer"]
+	path = apps/src/tokenizer
+	url = https://github.com/ryk765/AI-UCDS-llm-tokenizer-visualizer.git
+	branch = master
