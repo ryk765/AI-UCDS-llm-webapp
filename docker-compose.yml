@@ -3,7 +3,11 @@ services:
     build: ./gateway
     ports:
       - "80:80"
-    depends_on: [word-vector, next-token, attention, tokenizer]
+    depends_on:
+      - word-vector
+      - next-token
+      - attention
+      - tokenizer
 
   word-vector:
     build:
@@ -22,6 +26,15 @@ services:
         APP_DIR: apps/src/next-token
         APP_SLUG: next-token
         BACKEND_MODULE: app.main:app
+    environment:
+      MODEL_ID: sbintuitions/sarashina2.2-0.5b
+      DEVICE: cpu
+      MAX_NEW_TOKENS: "48"
+      TOP_K: "8"
+      TEMPERATURE: "0.8"
+      HF_HOME: /models
+    volumes:
+      - hf-cache:/models
 
   attention:
     build:
@@ -40,3 +53,5 @@ services:
         APP_DIR: apps/src/tokenizer
         APP_SLUG: tokenizer
         BACKEND_MODULE: app.main:app
+volumes:
+  hf-cache:

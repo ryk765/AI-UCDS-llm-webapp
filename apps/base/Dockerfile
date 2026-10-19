@@ -6,27 +6,29 @@ WORKDIR /build
 
 COPY ${APP_DIR}/frontend/package*.json ./
 RUN npm ci || npm install
-
 COPY ${APP_DIR}/frontend/ ./
 
-# ソースは変えず、ビルド時だけAPI接続先をサブパス用に書き換える
-RUN find src -type f \( -name '*.ts' -o -name '*.tsx' \) -exec sed -i \
-      -e "s#http://localhost:8000#/${APP_SLUG}/backend#g" \
-      -e "s#\"/api/#\"/${APP_SLUG}/backend/api/#g" {} + && \
-    mkdir -p src && \
-    ( [ -f src/vite-env.d.ts ] || echo '/// <reference types="vite/client" />' > src/vite-env.d.ts )
+# API 呼び出し先をサブパス運用向けに統一
+COPY apps/base/rewrite-api.cjs /rewrite-api.cjs
+RUN node /rewrite-api.cjs "${APP_SLUG}" src
 
+# Vite 環境変数（attention 等のため）
 ENV VITE_API_BASE=/${APP_SLUG}/backend
 ENV VITE_API_BASE_URL=/${APP_SLUG}/backend
+
+# import.meta.env 型定義が無い場合を補完
+RUN mkdir -p src && ( [ -f src/vite-env.d.ts ] || echo '/// <reference types="vite/client" />' > src/vite-env.d.ts )
+
 RUN npm run build -- --base=./
 
 # ---------- Stage 2: runtime ----------
 FROM python:3.11-slim
+
+# tokenizer/sudachi 系のビルド用に Rust も入れる
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      nginx supervisor build-essential curl ca-certificates \
+    nginx supervisor build-essential curl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Rust（sudachipy などの source build 用）
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal
 ENV PATH="/root/.cargo/bin:${PATH}"
 
@@ -39,6 +41,9 @@ COPY ${APP_DIR}/backend/requirements.txt ./
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 COPY ${APP_DIR}/backend/ ./
+
+# tokenizer で不足しやすい依存を保険で追加
+RUN pip install --no-cache-dir fugashi unidic-lite sentencepiece protobuf
 
 COPY --from=frontend /build/dist /usr/share/app/dist
 COPY apps/base/nginx-app.conf /etc/nginx/nginx.conf
